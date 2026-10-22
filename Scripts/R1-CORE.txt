@@ -1,0 +1,48 @@
+
+enable
+configure terminal
+hostname R1-CORE
+no ip domain-lookup
+enable secret cisco
+interface Ethernet0/0
+ description a SWM1 e0/0
+ ip address 172.22.10.197 255.255.255.252
+ ip nat inside
+ no shutdown
+interface Ethernet0/1
+ description a SWM2 e0/0
+ ip address 172.22.10.201 255.255.255.252
+ ip nat inside
+ no shutdown
+interface Ethernet0/2
+ description a ISP e0/0
+ ip address 203.0.113.2 255.255.255.252
+ ip nat outside
+ no shutdown
+interface Serial1/0
+ description P2P a R2 s1/0
+ ip address 172.22.10.193 255.255.255.252
+ ip nat inside
+ no shutdown
+access-list 1 permit 172.22.0.0 0.1.255.255
+ip nat inside source list 1 interface Ethernet0/2 overload
+ip route 0.0.0.0 0.0.0.0 203.0.113.1
+router ospf 1
+ router-id 1.1.1.1
+ area 1 stub
+ passive-interface default
+ no passive-interface Ethernet0/0
+ no passive-interface Ethernet0/1
+ no passive-interface Serial1/0
+ network 172.22.10.196 0.0.0.3 area 0
+ network 172.22.10.200 0.0.0.3 area 0
+ network 172.22.10.192 0.0.0.3 area 1
+ default-information originate
+access-list 10 permit 172.22.10.64 0.0.0.63
+line vty 0 4
+ password cisco
+ login
+ access-class 10 in
+ transport input telnet
+end
+write memory

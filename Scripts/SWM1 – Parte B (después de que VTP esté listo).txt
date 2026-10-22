@@ -1,0 +1,85 @@
+configure terminal
+ip routing
+track 1 interface Ethernet0/0 line-protocol
+interface Ethernet0/0
+ description a R1-CORE e0/0
+ no switchport
+ ip address 172.22.10.198 255.255.255.252
+ no shutdown
+ip access-list extended ACL-ESTUDIANTES
+ permit udp any host 224.0.0.102 eq 1985
+ permit ip 172.22.0.0 0.0.7.255 172.22.0.0 0.0.7.255
+ permit icmp any 172.22.10.64 0.0.0.63 echo-reply
+ permit ip 172.22.0.0 0.0.7.255 172.22.10.0 0.0.0.63
+ deny ip any 172.22.0.0 0.1.255.255
+ permit ip 172.22.0.0 0.0.7.255 any
+ip access-list extended ACL-DOCENTES
+ permit udp any host 224.0.0.102 eq 1985
+ permit ip 172.22.8.0 0.0.0.255 172.22.8.0 0.0.0.255
+ permit icmp any 172.22.10.64 0.0.0.63 echo-reply
+ permit ip 172.22.8.0 0.0.0.255 172.22.10.0 0.0.0.63
+ permit ip 172.22.8.0 0.0.0.255 172.22.9.0 0.0.0.127
+ deny ip any 172.22.0.0 0.1.255.255
+ permit ip 172.22.8.0 0.0.0.255 any
+ip access-list extended ACL-VOZ
+ permit udp any host 224.0.0.102 eq 1985
+ permit ip 172.22.10.128 0.0.0.31 172.22.10.128 0.0.0.31
+ permit icmp any 172.22.10.64 0.0.0.63 echo-reply
+ permit ip 172.22.10.128 0.0.0.31 172.22.10.0 0.0.0.63
+ deny ip any any
+interface Vlan10
+ ip address 172.22.0.2 255.255.248.0
+ ip access-group ACL-ESTUDIANTES in
+ standby version 2
+ standby 10 ip 172.22.0.1
+ standby 10 priority 110
+ standby 10 preempt
+ standby 10 track 1 decrement 20
+ no shutdown
+interface Vlan20
+ ip address 172.22.8.2 255.255.255.0
+ ip access-group ACL-DOCENTES in
+ standby version 2
+ standby 20 ip 172.22.8.1
+ standby 20 priority 100
+ standby 20 preempt
+ standby 20 track 1 decrement 20
+ no shutdown
+interface Vlan30
+ ip address 172.22.10.66 255.255.255.192
+ standby version 2
+ standby 30 ip 172.22.10.65
+ standby 30 priority 110
+ standby 30 preempt
+ standby 30 track 1 decrement 20
+ no shutdown
+interface Vlan40
+ ip address 172.22.10.130 255.255.255.224
+ ip access-group ACL-VOZ in
+ standby version 2
+ standby 40 ip 172.22.10.129
+ standby 40 priority 100
+ standby 40 preempt
+ standby 40 track 1 decrement 20
+ no shutdown
+router ospf 1
+ router-id 2.2.2.2
+ passive-interface default
+ no passive-interface Ethernet0/0
+ network 172.22.10.196 0.0.0.3 area 0
+ network 172.22.0.0 0.0.7.255 area 0
+ network 172.22.8.0 0.0.0.255 area 0
+ network 172.22.10.64 0.0.0.63 area 0
+ network 172.22.10.128 0.0.0.31 area 0
+access-list 10 permit 172.22.10.64 0.0.0.63
+line vty 0 4
+ password cisco
+ login
+ access-class 10 in
+ transport input telnet
+interface Ethernet1/3
+ switchport mode access
+ switchport access vlan 999
+ shutdown
+end
+write memory

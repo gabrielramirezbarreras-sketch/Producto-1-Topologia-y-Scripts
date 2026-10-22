@@ -1,0 +1,56 @@
+enable
+configure terminal
+hostname R2
+no ip domain-lookup
+enable secret cisco
+ip access-list extended ACL-FINANZAS
+ permit ip 172.22.9.128 0.0.0.127 172.22.9.128 0.0.0.127
+ permit icmp any 172.22.10.64 0.0.0.63 echo-reply
+ permit ip 172.22.9.128 0.0.0.127 172.22.10.0 0.0.0.63
+ deny ip any 172.22.0.0 0.1.255.255
+ permit ip 172.22.9.128 0.0.0.127 any
+ip access-list extended ACL-ACADEMICOS
+ permit ip 172.22.9.0 0.0.0.127 172.22.9.0 0.0.0.127
+ permit icmp any 172.22.10.64 0.0.0.63 echo-reply
+ permit ip 172.22.9.0 0.0.0.127 172.22.10.0 0.0.0.63
+ permit ip 172.22.9.0 0.0.0.127 172.22.8.0 0.0.0.255
+ deny ip any 172.22.0.0 0.1.255.255
+ permit ip 172.22.9.0 0.0.0.127 any
+interface Ethernet0/0
+ no ip address
+ no shutdown
+interface Ethernet0/0.50
+ description Finanzas
+ encapsulation dot1Q 50
+ ip address 172.22.9.129 255.255.255.128
+ ip access-group ACL-FINANZAS in
+interface Ethernet0/0.60
+ description Academicos
+ encapsulation dot1Q 60
+ ip address 172.22.9.1 255.255.255.128
+ ip access-group ACL-ACADEMICOS in
+interface Ethernet0/1
+ description Datacenter a SW e0/0
+ ip address 172.22.10.1 255.255.255.192
+ no shutdown
+interface Serial1/0
+ description P2P a R1-CORE s1/0
+ ip address 172.22.10.194 255.255.255.252
+ no shutdown
+router ospf 1
+ router-id 4.4.4.4
+ area 1 stub
+ passive-interface default
+ no passive-interface Serial1/0
+ network 172.22.10.192 0.0.0.3 area 1
+ network 172.22.9.0 0.0.0.127 area 1
+ network 172.22.9.128 0.0.0.127 area 1
+ network 172.22.10.0 0.0.0.63 area 1
+access-list 10 permit 172.22.10.64 0.0.0.63
+line vty 0 4
+ password cisco
+ login
+ access-class 10 in
+ transport input telnet
+end
+write memory

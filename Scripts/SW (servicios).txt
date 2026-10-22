@@ -1,0 +1,32 @@
+enable
+configure terminal
+hostname SW
+no ip domain-lookup
+enable secret cisco
+vtp domain ITLA-R2
+vtp version 2
+vtp mode transparent
+vtp password itla123
+vlan 70
+ name Datacenter
+vlan 998
+ name Blackhull-R2
+exit
+interface Ethernet0/0
+ description a R2 e0/1
+ switchport mode access
+ switchport access vlan 70
+ no shutdown
+interface Ethernet0/1
+ description SERVICIOS
+ switchport mode access
+ switchport access vlan 70
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+interface range Ethernet0/2 - 3
+ switchport mode access
+ switchport access vlan 998
+ shutdown
+end
+write memory

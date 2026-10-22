@@ -1,0 +1,46 @@
+enable
+configure terminal
+hostname SWA13
+no ip domain-lookup
+enable secret cisco
+vtp domain ITLA-R2
+vtp version 2
+vtp mode server
+vtp password itla123
+vlan 50
+ name Finanzas
+vlan 60
+ name Academicos
+vlan 70
+ name Datacenter
+vlan 998
+ name Blackhull-R2
+exit
+spanning-tree mode rapid-pvst
+interface Ethernet0/0
+ description Trunk a R2 e0/0
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 998
+ switchport trunk allowed vlan 50,60,998
+ no shutdown
+interface Ethernet0/1
+ description ACA1
+ switchport mode access
+ switchport access vlan 60
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+interface Ethernet0/2
+ description FIN1
+ switchport mode access
+ switchport access vlan 50
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+interface Ethernet0/3
+ switchport mode access
+ switchport access vlan 998
+ shutdown
+end
+write memory
